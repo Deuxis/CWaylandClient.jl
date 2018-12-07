@@ -4,7 +4,7 @@
 Wrapper around libwayland-client.
 
 Implemented differently:
-- naming and calling convention - Julia-lised the functions to have shorter names and specify their object via first argument. Eg. `wl_display_disconnect(struct wl_display *display)` -> `disconnect(display::Ptr{WlDisplay})`
+- naming and calling convention - Julia-lised the functions to have shorter names and be distinguished by different object overloads. Eg. `wl_display_disconnect(struct wl_display *display)` -> `disconnect(display::Ptr{WlDisplay})`
 - array marshalling functions - their library implementations require C unions and are more trouble then they're worth. Simply made them splat the array and call the non-array versions.
 
 Not implemented:

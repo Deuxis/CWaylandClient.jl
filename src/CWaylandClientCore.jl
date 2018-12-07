@@ -8,7 +8,6 @@ Implemented differently:
 - array marshalling functions - their library implementations require C unions and are more trouble then they're worth. Simply made them splat the array and call the non-array versions.
 
 Not implemented:
-- proxy wrapper (not used in wayland libs, manipulates void pointers making it stupid to implement in Julia without knowing the meaning)
 - log handler
 """
 module CWaylandClientCore

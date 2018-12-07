@@ -19,6 +19,9 @@ abstract type WlProxyWrapper <: WlProxy end
 abstract type WlEventQueue end
 
 # Display
+function connect()
+    ccall((:wl_display_connect, "libwayland-client"), Ptr{WlDisplay}, (Ptr{Cvoid},), C_NULL)
+end
 function connect(path::String)
     ccall((:wl_display_connect, "libwayland-client"), Ptr{WlDisplay}, (Cstring,), path)
 end
@@ -88,24 +91,29 @@ function destroy!(queue::Ptr{WlEventQueue})
     ccall((:wl_event_queue_destroy, "libwayland-client"), Cvoid, (Ptr{WlEventQueue},), queue)
 end
 # Proxy
-function create_proxy(factory::Ptr{WlProxy}, interface::Ref{WlInterface})
-    ccall((:wl_proxy_create, "libwayland-client"), Ptr{WlProxy},
+function create_proxy(factory::Ptr{<: WlProxy}, interface::Ref{WlInterface})
+    ret = ccall((:wl_proxy_create, "libwayland-client"), Ptr{WlProxy},
     (Ptr{WlProxy}, Ref{WlInterface}),
     factory, interface)
+    if ret == C_NULL
+        error("Failure creating proxy.")
+    else
+        return ret
+    end
 end
-function destroy!(proxy::Ptr{WlProxy})
+function destroy!(proxy::Ptr{WlProxyReal})
     ccall((:wl_proxy_destroy, "libwayland-client"), Cvoid, (Ptr{WlProxy},), proxy)
 end
-function getversion(proxy::Ptr{WlProxy})
+function getversion(proxy::Ptr{<: WlProxy})
     ccall((:wl_proxy_get_version, "libwayland-client"), UInt32, (Ptr{WlProxy},), proxy)
 end
-function getid(proxy::Ptr{WlProxy})
+function getid(proxy::Ptr{<: WlProxy})
     ccall((:wl_proxy_get_id, "libwayland-client"), UInt32, (Ptr{WlProxy},), proxy)
 end
-function getclass(proxy::Ptr{WlProxy})
+function getclass(proxy::Ptr{<: WlProxy})
     ccall((:wl_proxy_get_class, "libwayland-client"), Cstring, (Ptr{WlProxy},), proxy)
 end
-function setqueue!(proxy::Ptr{WlProxy}, queue::Ptr{WlEventQueue})
+function setqueue!(proxy::Ptr{<: WlProxy}, queue::Ptr{WlEventQueue})
     ccall((:wl_proxy_set_queue, "libwayland-client"), Cvoid, (Ptr{WlProxy},), proxy)
 end
 # Proxy wrapper
@@ -121,45 +129,45 @@ function destroy!(wrapper::Ptr{WlProxyWrapper})
     ccall((:wl_proxy_wrapper_destroy, "libwayland-client"), Cvoid, (Ptr{WlProxyWrapper},), wrapper)
 end
 # Marshalling messages
-function marshal(proxy::Ptr{WlProxy}, opcode::Integer, args...)
+function marshal(proxy::Ptr{<: WlProxy}, opcode::Integer, args...)
     ccall((:wl_proxy_marshal, "libwayland-client"), Cvoid,
     (Ptr{WlProxy}, UInt32, Any...),
     proxy, opcode, args...)
 end
-marshal(proxy::Ptr{WlProxy}, opcode::Integer, args::Vector) = marshal(proxy, opcode, args...)
-function marshal_constructor(proxy::Ptr{WlProxy}, opcode::Integer, interface::Ref{WlInterface}, args...)
+marshal(proxy::Ptr{<: WlProxy}, opcode::Integer, args::Vector) = marshal(proxy, opcode, args...)
+function marshal_constructor(proxy::Ptr{<: WlProxy}, opcode::Integer, interface::Ref{WlInterface}, args...)
     ccall((:wl_proxy_marshal_constructor, "libwayland-client"), Ptr{WlProxy},
     (Ptr{WlProxy}, UInt32, Ref{WlInterface}, Any...),
     proxy, opcode, interface, args...)
 end
-marshal_constructor(proxy::Ptr{WlProxy}, opcode::Integer, args::Vector, interface::Ref{WlInterface}) = marshal_constructor(proxy, opcode, interface, args...)
-function marshal_constructor_versioned(proxy::Ptr{WlProxy}, opcode::Integer, interface::Ref{WlInterface}, version::Integer, args...)
+marshal_constructor(proxy::Ptr{<: WlProxy}, opcode::Integer, args::Vector, interface::Ref{WlInterface}) = marshal_constructor(proxy, opcode, interface, args...)
+function marshal_constructor_versioned(proxy::Ptr{<: WlProxy}, opcode::Integer, interface::Ref{WlInterface}, version::Integer, args...)
     ccall((:wl_proxy_marshal_constructor_versioned, "libwayland-client"), Ptr{WlProxy},
     (Ptr{WlProxy}, UInt32, Ref{WlInterface}, UInt32, Any...),
     proxy, opcode, interface, version, args...)
 end
-marshal_constructor_versioned(proxy::Ptr{WlProxy}, opcode::Integer, args::Vector, interface::Ref{WlInterface}, version::Integer) = marshal_constructor_versioned(proxy, opcode, interface, args...)
+marshal_constructor_versioned(proxy::Ptr{<: WlProxy}, opcode::Integer, args::Vector, interface::Ref{WlInterface}, version::Integer) = marshal_constructor_versioned(proxy, opcode, interface, args...)
 # Listening
-function addlistener!(proxy::Ptr{WlProxy}, implementation::Ref, data::Ref)
+function addlistener!(proxy::Ptr{WlProxyReal}, implementation::Ref, data::Ref)
     ccall((:wl_proxy_add_listener, "libwayland-client"), Cint,
     (Ptr{WlProxy}, Ref, Ref),
     proxy, implementation, data)
 end
-function adddispatcher!(proxy::Ptr{WlProxy}, dispatcher_func::CFunction, dispatcher_data::Ref, data::Ref)
+function adddispatcher!(proxy::Ptr{WlProxyReal}, dispatcher_func::CFunction, dispatcher_data::Ref, data::Ref)
     ccall((:wl_proxy_add_dispatcher, "libwayland-client"), Cint,
     (Ptr{WlProxy}, CFunction, Ref, Ref),
     proxy, dispatcher_func, dispatcher_data, data)
 end
-function getlistener(proxy::Ptr{WlProxy})
+function getlistener(proxy::Ptr{WlProxyReal})
     ccall((:wl_proxy_get_listener, "libwayland-client"), Ptr, (Ptr{WlProxy},), proxy)
 end
 # User data (the same data which is added to a proxy when adding listeners and is supplied to the listeners)
-function setuserdata!(proxy::Ptr{WlProxy}, data::Ref)
+function setuserdata!(proxy::Ptr{WlProxyReal}, data::Ref)
     ccall((:wl_proxy_set_user_data, "libwayland-client"), Cvoid,
     (Ptr{WlProxy}, Ref),
     proxy, data)
 end
-function getuserdata(proxy::Ptr{WlProxy})
+function getuserdata(proxy::Ptr{WlProxyReal})
     ccall((:wl_proxy_get_user_data, "libwayland-client"), Ref, (Ptr{WlProxy},), proxy)
 end
 

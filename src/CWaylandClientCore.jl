@@ -1,5 +1,5 @@
 """
-    CWaylandClient
+    CWaylandClientCore
 
 Wrapper around libwayland-client.
 
@@ -11,7 +11,7 @@ Not implemented:
 - proxy wrapper (not used in wayland libs, manipulates void pointers making it stupid to implement in Julia without knowing the meaning)
 - log handler
 """
-module CWaylandClient
+module CWaylandClientCore
 
 abstract type WlDisplay end
 abstract type WlProxy end

@@ -1,0 +1,6 @@
+authors = ["Andrzej Korwin-Mikke <andrzej.kmikke@gmail.com>"]
+name = "CWaylandClient"
+uuid = "a0f44806-f9fe-11e8-2762-91affdb091fc"
+version = "0.1.0"
+
+[deps]
